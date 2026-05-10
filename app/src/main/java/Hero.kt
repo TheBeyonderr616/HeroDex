@@ -6,5 +6,5 @@ data class Hero(
     @SerializedName("nama") val nama: String,
     @SerializedName("deskripsi") val deskripsi: String,
     @SerializedName("kekuatan") val kekuatan: String,
-    @SerializedName("image_name") val imageName: String
+    @SerializedName("image_url") val imageUrl: String
 )
