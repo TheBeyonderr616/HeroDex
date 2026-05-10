@@ -1,9 +1,10 @@
 package com.tugas.herodex.model
-import androidx.annotation.DrawableRes
+
+import com.google.gson.annotations.SerializedName
 
 data class Hero(
-    val nama: String,
-    val deskripsi: String,
-    val kekuatan: String,
-    @DrawableRes val imageRes: Int
+    @SerializedName("nama") val nama: String,
+    @SerializedName("deskripsi") val deskripsi: String,
+    @SerializedName("kekuatan") val kekuatan: String,
+    @SerializedName("image_name") val imageName: String
 )

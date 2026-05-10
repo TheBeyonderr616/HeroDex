@@ -18,12 +18,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.tugas.herodex.model.Hero
 import com.tugas.herodex.model.HeroSource
+import com.tugas.herodex.network.RetrofitClient
 import com.tugas.herodex.ui.theme.HeroDexTheme
 
 class MainActivity : ComponentActivity() {
@@ -44,55 +48,71 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun HeroDexApp() {
-    val listHero = HeroSource.dummyHero
+    var listHero by remember { mutableStateOf<List<Hero>>(emptyList()) }
+    var isAppLoading by remember { mutableStateOf(true) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Text(
-                    text = "AVENGERS INITIATIVE",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    text = "Discover the facts behind your favorite heroes.",
-                    color = Color.LightGray,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+    LaunchedEffect(Unit) {
+        try {
+            val response = RetrofitClient.instance.getHeroes()
+            listHero = response
+            isAppLoading = false
+        } catch (e: Exception) {
+            isAppLoading = false
+        }
+    }
 
-                Text(
-                    text = "Featured Heroes",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(listHero) { hero ->
-                        HeroRowItem(hero = hero)
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (isAppLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Text(
+                        text = "AVENGERS INITIATIVE",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = "Discover the facts behind your favorite heroes.",
+                        color = Color.LightGray,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Text(
+                        text = "Featured Heroes",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(listHero) { hero ->
+                            HeroRowItem(hero = hero)
+                        }
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "Full Database",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "Full Database",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
-            items(listHero) { hero ->
-                HeroCardDetail(hero = hero, snackbarHostState = snackbarHostState)
+                items(listHero) { hero ->
+                    HeroCardDetail(hero = hero, snackbarHostState = snackbarHostState)
+                }
             }
         }
 
@@ -105,6 +125,10 @@ fun HeroDexApp() {
 
 @Composable
 fun HeroRowItem(hero: Hero) {
+    val context = LocalContext.current
+    val resId = HeroSource.getResourceId(context, hero.imageName)
+    val imageRes = if (resId != 0) resId else R.drawable.ironman
+
     Card(
         modifier = Modifier.width(150.dp),
         shape = RoundedCornerShape(12.dp),
@@ -112,7 +136,7 @@ fun HeroRowItem(hero: Hero) {
     ) {
         Column {
             Image(
-                painter = painterResource(id = hero.imageRes),
+                painter = painterResource(id = imageRes),
                 contentDescription = hero.nama,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -132,8 +156,11 @@ fun HeroRowItem(hero: Hero) {
 @Composable
 fun HeroCardDetail(hero: Hero, snackbarHostState: SnackbarHostState) {
     var isFavorite by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+    var isRecruiting by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val resId = HeroSource.getResourceId(context, hero.imageName)
+    val imageRes = if (resId != 0) resId else R.drawable.ironman
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -144,7 +171,7 @@ fun HeroCardDetail(hero: Hero, snackbarHostState: SnackbarHostState) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Box {
                 Image(
-                    painter = painterResource(id = hero.imageRes),
+                    painter = painterResource(id = imageRes),
                     contentDescription = hero.nama,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -182,20 +209,21 @@ fun HeroCardDetail(hero: Hero, snackbarHostState: SnackbarHostState) {
                 Button(
                     onClick = {
                         coroutineScope.launch {
-                            isLoading = true
+                            isRecruiting = true
                             delay(2000)
-                            isLoading = false
+                            isRecruiting = false
                             snackbarHostState.showSnackbar("Hero ${hero.nama} berhasil masuk tim!")
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading,
+                    enabled = !isRecruiting,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator( modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
+                    if (isRecruiting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Memproses...")
