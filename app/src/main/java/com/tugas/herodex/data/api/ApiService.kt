@@ -1,6 +1,6 @@
-package com.tugas.herodex.network
+package com.tugas.herodex.data.api
 
-import com.tugas.herodex.model.Hero
+import com.tugas.herodex.data.model.Hero
 import retrofit2.http.GET
 
 interface ApiService {

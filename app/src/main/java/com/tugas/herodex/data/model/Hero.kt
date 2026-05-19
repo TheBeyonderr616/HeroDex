@@ -1,4 +1,4 @@
-package com.tugas.herodex.model
+package com.tugas.herodex.data.model
 
 import com.google.gson.annotations.SerializedName
 

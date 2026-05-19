@@ -24,8 +24,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.tugas.herodex.model.Hero
-import com.tugas.herodex.network.RetrofitClient
+import com.tugas.herodex.data.model.Hero
+import com.tugas.herodex.data.api.RetrofitClient
+import com.tugas.herodex.data.repository.HeroRepository
 import com.tugas.herodex.ui.theme.HeroDexTheme
 
 class MainActivity : ComponentActivity() {
@@ -50,10 +51,11 @@ fun HeroDexApp() {
     var isAppLoading by remember { mutableStateOf(true) }
     var isError by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val repository = remember { HeroRepository() }
 
     LaunchedEffect(Unit) {
         try {
-            val response = RetrofitClient.instance.getHeroes()
+            val response = repository.getHeroes()
             listHero = response
             isAppLoading = false
             isError = false

@@ -1,4 +1,4 @@
-package com.tugas.herodex.network
+package com.tugas.herodex.data.api
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
